@@ -1,0 +1,55 @@
+---
+- name: Ensure configuration directories exist.
+  file:
+    path: "{{ item }}"
+    state: directory
+    follow: true
+  with_flattened:
+    - "{{ php_conf_paths }}"
+    - "{{ php_extension_conf_paths }}"
+
+- name: Place PHP configuration file in place.
+  template:
+    src: php.ini.j2
+    dest: "{{ item }}/php.ini"
+    owner: root
+    group: root
+    mode: 0644
+  with_items: "{{ php_conf_paths }}"
+  notify: restart webserver
+  when: php_use_managed_ini
+
+- name: Place PHP-FPM configuration file in place.
+  template:
+    src: php-fpm.conf.j2
+    dest: "{{ item }}/php-fpm.conf"
+    owner: root
+    group: root
+    mode: 0644
+  with_items: "{{ php_fpm_conf_path }}"
+  notify: restart webserver
+
+- name: Create log directory
+  file:
+    path: /var/log/php-fpm
+    state: directory
+    owner: www-data
+    group: www-data
+  notify: 
+   - restart webserver 
+   - restart php-fpm
+
+- name: Fix path in default logrotate
+  lineinfile:
+    path: /etc/logrotate.d/php7.1-fpm
+    regexp: '^/var/log/'
+    line: '/var/log/php-fpm/*.log {'   
+   
+- name: Fixing permissions of PHP-FPM socket
+  file:
+    path: /dev/shm/php-cgi.sock
+    state: file
+    owner: www-data
+    group: www-data
+    mode: 0666
+  notify: restart webserver    
