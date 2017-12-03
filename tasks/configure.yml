@@ -16,7 +16,6 @@
     group: root
     mode: 0644
   with_items: "{{ php_conf_paths }}"
-  notify: restart webserver
   when: php_use_managed_ini
 
 - name: Place PHP-FPM configuration file in place.
@@ -27,7 +26,6 @@
     group: root
     mode: 0644
   with_items: "{{ php_fpm_conf_path }}"
-  notify: restart webserver
 
 - name: Create log directory
   file:
@@ -35,16 +33,19 @@
     state: directory
     owner: www-data
     group: www-data
-  notify: 
-   - restart webserver 
-   - restart php-fpm
 
 - name: Fix path in default logrotate
   lineinfile:
     path: /etc/logrotate.d/php7.1-fpm
     regexp: '^/var/log/'
-    line: '/var/log/php-fpm/*.log {'   
-   
+    line: '/var/log/php-fpm/*.log {'
+
+- name: Restarting PHP-FPM to avoid errors in next tasks
+  systemd:
+    name: "{{ php_fpm_daemon }}"
+    state: restarted
+    daemon_reload: yes
+
 - name: Fixing permissions of PHP-FPM socket
   file:
     path: /dev/shm/php-cgi.sock
@@ -52,4 +53,9 @@
     owner: www-data
     group: www-data
     mode: 0666
+
+- name: Remove APCu config file
+  file:
+    path: "/etc/php/7.1/mods-available/{{ php_apc_conf_filename }}"
+    state: absent
   notify: restart webserver    
