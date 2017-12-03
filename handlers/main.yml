@@ -7,7 +7,8 @@
   when: php_enable_webserver
 
 - name: restart php-fpm
-  service:
+  systemd:
     name: "{{ php_fpm_daemon }}"
     state: restarted
+    daemon_reload: yes
   when: php_enable_php_fpm
