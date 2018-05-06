@@ -34,11 +34,19 @@
     owner: www-data
     group: www-data
 
+- name: Looking for a php files in logrotate path
+  find:
+    paths: /etc/logrotate.d/
+    pattern: "php*"
+    file_type: file
+  register: php_files
+
 - name: Fix path in default logrotate
   lineinfile:
-    path: /etc/logrotate.d/php7.1-fpm
+    path: "{{ item.path }}"
     regexp: '^/var/log/'
     line: '/var/log/php-fpm/*.log {'
+  with_items: "{{ php_files.files }}"
 
 - name: Restarting PHP-FPM to avoid errors in next tasks
   systemd:
