@@ -56,7 +56,7 @@
 
 - name: Fixing permissions of PHP-FPM socket
   file:
-    path: /dev/shm/php-cgi.sock
+    path: "{{ php_fpm_listen }}"
     state: file
     owner: www-data
     group: www-data
