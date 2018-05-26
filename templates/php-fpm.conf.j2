@@ -23,10 +23,10 @@ daemonize = yes
 [www]
 slowlog = /var/log/php-fpm/www-slow.log
 php_admin_value[error_log] = /var/log/php-fpm/www-error.log
-listen = /dev/shm/php-cgi.sock
-listen.allowed_clients = 127.0.0.1
-user = www-data
-group = www-data
+listen = {{ php_fpm_listen }}
+listen.allowed_clients = {{ php_fpm_listen_allowed_clients }}
+user = deploy
+group = deploy
 listen.mode = 0666
 
 pm = dynamic
